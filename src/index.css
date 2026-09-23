@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+/* Suppress tap highlights on old Android WebViews */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Hide scrollbar for clean horizontal chip strips */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Hardware accelerated transform utility */
+.hw-accel {
+  transform: translateZ(0);
+  will-change: transform;
+}

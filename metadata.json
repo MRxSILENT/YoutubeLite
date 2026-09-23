@@ -1,0 +1,6 @@
+{
+  "name": "YouTube Lite - Ultra Fast for Old Android",
+  "description": "Ultra-lightweight, battery-efficient YouTube client built specifically for older Android phones, low RAM (512MB-2GB), and 2G/3G/4G networks with custom quality selection, data saver, offline downloads, and audio-only playback.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FF1A1A" />
+      <stop offset="100%" stop-color="#CC0000" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.3" />
+    </filter>
+  </defs>
+  <!-- Background with subtle corner rounding -->
+  <rect width="512" height="512" rx="115" fill="url(#grad)" />
+  <!-- White Play Button -->
+  <path d="M210 160 L360 256 L210 352 Z" fill="#FFFFFF" filter="url(#shadow)" />
+  <!-- "Go / Lite" badge inside -->
+  <g transform="translate(340, 360)">
+    <rect x="-10" y="-12" width="90" height="42" rx="10" fill="#000000" opacity="0.65" />
+    <text x="35" y="16" fill="#00E676" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif" font-size="22" font-weight="900" text-anchor="middle">LITE</text>
+  </g>
+</svg>
