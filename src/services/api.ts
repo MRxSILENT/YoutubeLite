@@ -25,6 +25,106 @@ export function extractYouTubeId(urlOrId: string): string | null {
   return null;
 }
 
+// Client-side JSONP suggestion query for static GitHub Pages hosting
+function fetchJsonpSuggestions(query: string): Promise<string[]> {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined') return resolve([]);
+    const callbackName = 'yt_suggest_' + Math.random().toString(36).substring(2, 9);
+    const script = document.createElement('script');
+
+    const cleanup = () => {
+      try {
+        delete (window as unknown as Record<string, unknown>)[callbackName];
+      } catch {
+        // ignore
+      }
+      script.remove();
+    };
+
+    (window as unknown as Record<string, (data: unknown) => void>)[callbackName] = (data: unknown) => {
+      cleanup();
+      const raw = data as [string, [string, number, number[]][]];
+      if (Array.isArray(raw) && Array.isArray(raw[1])) {
+        const list = raw[1].map((item) => item[0]);
+        resolve(list.slice(0, 8));
+      } else {
+        resolve([]);
+      }
+    };
+
+    script.src = `https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(query)}&jsonp=${callbackName}`;
+    script.onerror = () => {
+      cleanup();
+      resolve([]);
+    };
+
+    document.body.appendChild(script);
+    setTimeout(() => {
+      cleanup();
+      resolve([]);
+    }, 2500);
+  });
+}
+
+// Static fallback search using public Invidious API
+async function searchPublicInvidious(query: string): Promise<Video[]> {
+  const instances = [
+    'https://invidious.private.coffee',
+    'https://invidious.jing.rocks',
+    'https://vid.puffyan.us',
+  ];
+
+  for (const inst of instances) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 3500);
+
+      const res = await fetch(`${inst}/api/v1/search?q=${encodeURIComponent(query)}&type=video`, {
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          return data.slice(0, 15).map((item: {
+            videoId: string;
+            title: string;
+            author?: string;
+            authorThumbnails?: { url: string }[];
+            videoThumbnails?: { quality: string; url: string }[];
+            lengthSeconds?: number;
+            viewCountText?: string;
+            viewCount?: number;
+            publishedText?: string;
+            description?: string;
+          }) => ({
+            id: item.videoId,
+            title: item.title,
+            channelTitle: item.author || 'Creator',
+            channelAvatar: item.authorThumbnails?.[0]?.url,
+            thumbnail:
+              item.videoThumbnails?.find((t) => t.quality === 'medium')?.url ||
+              `https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`,
+            duration: item.lengthSeconds
+              ? `${Math.floor(item.lengthSeconds / 60)}:${String(item.lengthSeconds % 60).padStart(2, '0')}`
+              : '3:30',
+            views:
+              item.viewCountText ||
+              (item.viewCount ? `${(item.viewCount / 1000).toFixed(0)}K views` : '100K views'),
+            publishedAt: item.publishedText || 'Recently',
+            description: item.description || '',
+            category: 'YouTube Search',
+          }));
+        }
+      }
+    } catch {
+      // Continue to next mirror
+    }
+  }
+  return [];
+}
+
 export const ApiService = {
   async getTrending(category: string = 'All'): Promise<Video[]> {
     try {
@@ -36,7 +136,7 @@ export const ApiService = {
         }
       }
     } catch {
-      // Offline or network error - fallback to local catalog
+      // Static hosting fallback
     }
 
     // Local filter fallback
@@ -50,7 +150,7 @@ export const ApiService = {
   async search(query: string): Promise<Video[]> {
     const directId = extractYouTubeId(query);
     if (directId) {
-      // If user pasted a direct YouTube ID or link, return that video immediately
+      // Direct YouTube video ID or link pasted
       return [
         {
           id: directId,
@@ -68,6 +168,7 @@ export const ApiService = {
       ];
     }
 
+    // 1. Try local server endpoint if running with Express backend
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
       if (res.ok) {
@@ -77,10 +178,20 @@ export const ApiService = {
         }
       }
     } catch {
-      // Use client fallback
+      // Expected on GitHub Pages (static host)
     }
 
-    // Client-side search fallback across initial videos
+    // 2. Try client-side public Invidious query (for GitHub Pages static hosting)
+    try {
+      const liveResults = await searchPublicInvidious(query);
+      if (liveResults.length > 0) {
+        return liveResults;
+      }
+    } catch {
+      // ignore
+    }
+
+    // 3. Fallback across built-in curated catalog
     const qLower = query.toLowerCase();
     const matches = INITIAL_VIDEOS.filter(
       (v) =>
@@ -92,11 +203,11 @@ export const ApiService = {
 
     if (matches.length > 0) return matches;
 
-    // If query didn't match local database, return curated items plus synthetic video match
+    // 4. Default recommendation
     return [
       {
         id: 'dQw4w9WgXcQ',
-        title: `Search result: "${query}" (Recommended stream)`,
+        title: `Search result for "${query}" (Recommended Stream)`,
         channelTitle: 'YouTube Top Pick',
         channelAvatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop',
         thumbnail: 'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=640&h=360&fit=crop',
@@ -113,17 +224,27 @@ export const ApiService = {
 
   async getSuggestions(query: string): Promise<string[]> {
     if (!query || query.trim().length < 2) return [];
+
+    // 1. Try backend endpoint
     try {
       const res = await fetch(`/api/suggestions?q=${encodeURIComponent(query)}`);
       if (res.ok) {
         const data = await res.json();
-        if (Array.isArray(data)) return data;
+        if (Array.isArray(data) && data.length > 0) return data;
       }
     } catch {
-      // Fallback
+      // Static host fallback
     }
 
-    // Default suggestions based on common queries
+    // 2. Try client-side JSONP (works natively on GitHub Pages!)
+    try {
+      const jsonpResults = await fetchJsonpSuggestions(query);
+      if (jsonpResults.length > 0) return jsonpResults;
+    } catch {
+      // ignore
+    }
+
+    // 3. Fallback to default search queries
     const defaults = [
       'lofi hip hop radio',
       'ed sheeran songs',
