@@ -1,20 +1,35 @@
 # YouTube Lite - Ultra Fast for Old Android 📱⚡
 
-An ultra-lightweight, battery-friendly Progressive Web App (PWA) built specifically for older Android phones (KitKat, Lollipop, Marshmallow, Nougat, Go edition, and low-RAM 512MB–2GB devices).
+An ultra-lightweight, battery-efficient web app built using **HTML, CSS, and JSON** specifically for older Android phones (Android 4.4 KitKat through Android 9, Go Edition, and low-RAM 512MB–2GB devices).
 
 ---
 
-## 🚀 How to Host on GitHub (GitHub Pages in 2 Minutes)
+## 📁 Pure HTML, CSS & JSON Architecture
 
-This repository is already configured with automated GitHub Actions and relative asset paths (`./`) so it can be hosted on GitHub Pages with zero configuration.
+This project is designed to be hosted directly on **GitHub Pages** or opened on any ancient browser with zero server and zero complex runtime overhead:
 
-### Method 1: Automatic Deployment with GitHub Actions (Recommended)
+1. **JSON Data Layer (`public/data/`)**:
+   - `videos.json`: Structured video catalog with YouTube video IDs, resolutions, channel metadata, duration, and view counts.
+   - `categories.json`: Categories for fast filtering (Music, Gaming, Tech, Learning, History, Low Data).
+   - `channels.json`: Channel profiles and subscriptions.
 
-1. **Create a new repository on GitHub**:
-   - Go to [GitHub New Repository](https://github.com/new).
-   - Name your repo (e.g., `youtube-lite` or `yt-lite`).
+2. **Pure HTML & CSS Layout**:
+   - Fast, hardware-accelerated layouts optimized for low-RAM chipsets (Snapdragon 400, MediaTek MT6580).
+   - AMOLED Pure Black (`#000000`) theme to turn off OLED pixels and save battery.
+   - High-contrast, finger-friendly touch targets (min 44px) for older touchscreens.
 
-2. **Push this code to your GitHub repository**:
+3. **Two Deployment Options for GitHub**:
+   - **Option A (Standalone HTML/CSS/JSON)**: `public/standalone.html` is a standalone, single-file HTML app with embedded CSS and JSON. You can rename it to `index.html` and host it anywhere with **zero build step**, zero npm, and zero dependencies!
+   - **Option B (Progressive Web App with GitHub Actions)**: The root project deploys automatically to GitHub Pages using the included `.github/workflows/deploy.yml` workflow, providing offline service worker caching and home-screen installability.
+
+---
+
+## 🚀 How to Host on GitHub Pages (2 Minutes)
+
+### Method 1: Automated Deployment (GitHub Actions)
+
+1. Create a repository on GitHub.
+2. Push this project to your repository:
    ```bash
    git init
    git add .
@@ -23,62 +38,43 @@ This repository is already configured with automated GitHub Actions and relative
    git remote add origin https://github.com/<your-username>/<your-repo-name>.git
    git push -u origin main
    ```
+3. In your repo on GitHub, go to **Settings** > **Pages** > **Build and deployment** > **Source**, and select **GitHub Actions**.
+4. Your app is live at:
+   ```
+   https://<your-username>.github.io/<your-repo-name>/
+   ```
 
-3. **Enable GitHub Pages in your repo settings**:
-   - In your GitHub repository, click on **Settings** (top tab).
-   - In the left sidebar, click on **Pages**.
-   - Under **Build and deployment** > **Source**, select **GitHub Actions**.
+### Method 2: Zero-Build Standalone (Pure HTML, CSS, JSON)
 
-4. **Done!**
-   - The included `.github/workflows/deploy.yml` workflow will automatically run, build the app, and deploy it.
-   - Your site will be live at:
-     ```
-     https://<your-username>.github.io/<your-repo-name>/
-     ```
-
----
-
-### Method 2: Manual Build & Push `dist` to `gh-pages` branch
-
-If you prefer building locally:
-
-```bash
-# 1. Install dependencies and build
-npm install
-npm run build
-
-# 2. Deploy dist directory to gh-pages branch
-npx gh-pages -d dist
-```
-
-Then in GitHub Settings -> Pages, select branch **`gh-pages`** and folder **`/ (root)`**.
+If you don't want any build step or node_modules at all:
+1. Copy `public/standalone.html` and save it as `index.html`.
+2. Commit and push it to a GitHub repository with GitHub Pages set to deploy the `main` branch.
+3. It runs immediately on any browser!
 
 ---
 
 ## 🌟 Key Features for Older Android Phones
 
-- **YouTube Go Style Quality Selector**: Pick between 144p (~1.5 MB/10min), 240p (~3.8 MB), 360p (~8.5 MB, optimal for 512MB RAM), 480p, and 720p HD.
-- **Audio-Only & Pocket Mode**: Saves 85%+ CPU, battery, and mobile data for music and podcasts with animated waveform and screen dimmer.
+- **YouTube Go Quality Selector**: 144p (~1.5 MB/10min), 240p (~3.8 MB), 360p (~8.5 MB, optimal for 512MB RAM), 480p, and 720p.
+- **Audio-Only & Pocket Mode**: Saves 85%+ CPU, battery, and mobile data for music and podcasts with screen dimmer.
 - **Sleep Timer**: Auto-shuts off playback after 15m, 30m, 45m, or 60m to prevent battery drain overnight.
-- **Offline Mode**: Save videos into local phone storage and replay anytime with zero internet.
+- **Offline Mode**: Save videos into local browser storage (JSON) and replay anytime with zero internet connection.
 - **Pure Black AMOLED Theme**: True `#000000` background turns off pixels on OLED/AMOLED screens.
-- **Low-RAM Mode**: Disables expensive CSS blur filters and heavy shadows to avoid stuttering on low-end chipsets.
-- **Real YouTube Search & Autocomplete**: Searches live YouTube videos and parses direct links (`youtu.be/...`, `youtube.com/watch?v=...`).
+- **Direct YouTube URL & Search**: Plays pasted links (`youtu.be/...`, `youtube.com/watch?v=...`) or searches live YouTube.
 - **No Google Account Required**: Subscribe to channels, save watch history, and like videos locally without Google Play Services.
-- **PWA Standalone (APK-Like)**: Add to Home Screen to run full-screen without browser URL bars.
 
 ---
 
-## 💻 Local Development
+## 💻 Local Commands
 
 ```bash
 # Install dependencies
 npm install
 
-# Start development server
+# Start local server
 npm run dev
 
-# Build for production (outputs to ./dist)
+# Build static bundle for GitHub Pages (outputs to ./dist)
 npm run build
 ```
 

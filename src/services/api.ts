@@ -139,6 +139,23 @@ export const ApiService = {
       // Static hosting fallback
     }
 
+    // Try fetching from public/data/videos.json
+    try {
+      const jsonRes = await fetch('./data/videos.json');
+      if (jsonRes.ok) {
+        const jsonData: Video[] = await jsonRes.json();
+        if (Array.isArray(jsonData) && jsonData.length > 0) {
+          if (category === 'All') return jsonData;
+          const filtered = jsonData.filter(
+            (v) => v.category?.toLowerCase() === category.toLowerCase()
+          );
+          return filtered.length > 0 ? filtered : jsonData;
+        }
+      }
+    } catch {
+      // Fallback
+    }
+
     // Local filter fallback
     if (category === 'All') return INITIAL_VIDEOS;
     const filtered = INITIAL_VIDEOS.filter(

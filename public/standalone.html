@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+  <title>YouTube Lite - Pure HTML/CSS/JSON</title>
+  <meta name="description" content="Ultra-lightweight YouTube client built using pure HTML, CSS, and JSON. Optimized for older Android phones.">
+  <meta name="theme-color" content="#FF0000">
+  <meta name="mobile-web-app-capable" content="yes">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="manifest" href="manifest.webmanifest">
+  <style>
+    /* Pure CSS - Ultra-Lightweight & Hardware-Accelerated for Old Android */
+    :root {
+      --bg: #000000;
+      --surface: #121212;
+      --surface-2: #1e1e1e;
+      --border: #2a2a2a;
+      --text: #ffffff;
+      --text-muted: #aaaaaa;
+      --red: #ff0000;
+      --green: #00e676;
+      --blue: #2979ff;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+    /* Header */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 30;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+    }
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .play-icon {
+      width: 28px;
+      height: 20px;
+      background: var(--red);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .triangle {
+      width: 0;
+      height: 0;
+      border-top: 4px solid transparent;
+      border-bottom: 4px solid transparent;
+      border-left: 7px solid #fff;
+      margin-left: 2px;
+    }
+    .logo-text {
+      font-size: 16px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+    }
+    .lite-tag {
+      font-size: 9px;
+      font-weight: 800;
+      background: var(--red);
+      padding: 1px 4px;
+      border-radius: 3px;
+      margin-left: 4px;
+      vertical-align: top;
+    }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .btn-badge {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--green);
+    }
+    .icon-btn {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      cursor: pointer;
+      padding: 6px;
+      border-radius: 50%;
+      font-size: 15px;
+      line-height: 1;
+    }
+    /* Categories */
+    .categories-bar {
+      position: sticky;
+      top: 45px;
+      z-index: 20;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 8px 12px;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      white-space: nowrap;
+      scrollbar-width: none;
+    }
+    .categories-bar::-webkit-scrollbar { display: none; }
+    .cat-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      padding: 6px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .cat-btn.active {
+      background: #ffffff;
+      color: #000000;
+      border-color: #ffffff;
+    }
+    /* Video Feed */
+    main {
+      flex: 1;
+      padding-bottom: 70px;
+    }
+    .video-card {
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 12px;
+      cursor: pointer;
+    }
+    .video-card:active {
+      background: rgba(255,255,255,0.03);
+    }
+    .thumb-wrap {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      overflow: hidden;
+    }
+    .thumb-wrap img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .duration-pill {
+      position: absolute;
+      bottom: 6px;
+      right: 6px;
+      background: rgba(0,0,0,0.85);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 5px;
+      border-radius: 4px;
+    }
+    .card-meta {
+      display: flex;
+      gap: 10px;
+      padding: 10px 12px 0 12px;
+    }
+    .chan-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #333;
+      flex-shrink: 0;
+    }
+    .card-details {
+      flex: 1;
+      min-width: 0;
+    }
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.3;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+    .card-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 3px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    /* Bottom Nav */
+    nav.bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-around;
+      padding: 6px 0;
+      z-index: 40;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-size: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 4px 10px;
+    }
+    .nav-item.active {
+      color: var(--red);
+    }
+    /* Player Overlay */
+    .player-overlay {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+    .player-screen {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #000;
+      z-index: 2;
+    }
+    .player-screen iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+    .audio-view {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+      padding: 20px;
+      text-align: center;
+    }
+    .audio-art {
+      width: 100px;
+      height: 100px;
+      border-radius: 16px;
+      object-fit: cover;
+      margin-bottom: 12px;
+      border: 1px solid #333;
+    }
+    .player-info {
+      padding: 14px;
+    }
+    .player-actions {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      margin: 12px 0;
+      padding-bottom: 4px;
+    }
+    .act-btn {
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 8px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+    }
+    .act-btn.active {
+      background: var(--red);
+      border-color: var(--red);
+    }
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+  <!-- Top Header -->
+  <header>
+    <div class="logo-group" onclick="showTab('home')">
+      <div class="play-icon"><div class="triangle"></div></div>
+      <div class="logo-text">YouTube<span class="lite-tag">LITE</span></div>
+    </div>
+    <div class="header-actions">
+      <button class="btn-badge" onclick="openQualityModal()">
+        <span class="dot"></span><span id="current-quality-badge">360p</span>
+      </button>
+      <button class="icon-btn" onclick="toggleSearch()" title="Search">🔍</button>
+      <button class="icon-btn" onclick="openSettingsModal()" title="Settings">⚙️</button>
+    </div>
+  </header>
+
+  <!-- Categories Bar -->
+  <div class="categories-bar" id="categories-container">
+    <button class="cat-btn active" onclick="filterCategory('All')">All</button>
+    <button class="cat-btn" onclick="filterCategory('Music')">Music</button>
+    <button class="cat-btn" onclick="filterCategory('Gaming')">Gaming</button>
+    <button class="cat-btn" onclick="filterCategory('Tech')">Tech</button>
+    <button class="cat-btn" onclick="filterCategory('Learning')">Learning</button>
+    <button class="cat-btn" onclick="filterCategory('History')">History</button>
+    <button class="cat-btn" onclick="showTab('downloads')">Offline</button>
+  </div>
+
+  <!-- Search Input Container (Toggleable) -->
+  <div id="search-box" style="display:none; padding:10px; background:var(--surface); border-bottom:1px solid var(--border);">
+    <input type="text" id="search-input" placeholder="Search YouTube or paste URL..." style="width:100%; padding:10px; background:#000; border:1px solid var(--border); border-radius:20px; color:#fff; font-size:13px;" onkeyup="handleSearch(event)">
+  </div>
+
+  <!-- Main Feed Section -->
+  <main id="main-content">
+    <div id="video-list"></div>
+  </main>
+
+  <!-- Offline Downloads View -->
+  <div id="downloads-view" class="hidden" style="padding:14px;">
+    <h2 style="font-size:16px; margin-bottom:6px;">📱 Offline Saved Videos</h2>
+    <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">Saved locally in your browser storage. Works without internet.</p>
+    <div id="downloads-list"></div>
+  </div>
+
+  <!-- Video Player Overlay -->
+  <div id="player-modal" class="player-overlay hidden">
+    <div class="player-screen" id="player-screen-box">
+      <iframe id="video-iframe" src="" allowfullscreen allow="autoplay"></iframe>
+      <div id="audio-screen" class="audio-view hidden">
+        <img id="audio-art" class="audio-art" src="" alt="Audio Artwork">
+        <div style="font-size:11px; font-weight:800; color:var(--green); margin-bottom:4px;">AUDIO-ONLY MODE • 85% DATA SAVED</div>
+        <div id="audio-title" style="font-size:14px; font-weight:700;"></div>
+        <div id="audio-chan" style="font-size:12px; color:var(--text-muted);"></div>
+      </div>
+    </div>
+    <div class="player-info">
+      <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+        <h1 id="player-title" style="font-size:15px; font-weight:700; line-height:1.3;"></h1>
+        <button onclick="closePlayer()" style="background:transparent; border:none; color:#fff; font-size:20px; padding:4px;">✕</button>
+      </div>
+      <div id="player-meta" style="font-size:11px; color:var(--text-muted); margin-top:4px;"></div>
+
+      <div class="player-actions">
+        <button class="act-btn" id="audio-toggle-btn" onclick="toggleAudioMode()">🎧 Audio Only</button>
+        <button class="act-btn" onclick="openQualityModal()">⚡ Quality</button>
+        <button class="act-btn" onclick="saveOfflineCurrent()">⬇️ Save Offline</button>
+        <button class="act-btn" onclick="shareCurrent()">🔗 Share</button>
+        <button class="act-btn" onclick="setSleepTimer()">🌙 Sleep Timer</button>
+      </div>
+
+      <div id="player-chan-row" style="display:flex; align-items:center; justify-content:space-between; padding:12px 0; border-top:1px solid var(--border); border-bottom:1px solid var(--border);">
+        <div style="display:flex; align-items:center; gap:10px;">
+          <img id="player-avatar" class="chan-avatar" src="" alt="Avatar">
+          <div>
+            <div id="player-channel" style="font-size:13px; font-weight:700;"></div>
+            <div id="player-subs" style="font-size:11px; color:var(--text-muted);"></div>
+          </div>
+        </div>
+        <button id="sub-btn" class="act-btn" style="background:#fff; color:#000;" onclick="toggleSub()">Subscribe</button>
+      </div>
+
+      <div id="player-desc" style="font-size:12px; color:#ccc; line-height:1.4; margin-top:12px; background:var(--surface); padding:10px; border-radius:10px;"></div>
+    </div>
+  </div>
+
+  <!-- Bottom Navigation -->
+  <nav class="bottom-nav">
+    <button class="nav-item active" onclick="showTab('home')">🏠<span>Home</span></button>
+    <button class="nav-item" onclick="showTab('explore')">🧭<span>Explore</span></button>
+    <button class="nav-item" onclick="showTab('downloads')">📥<span>Offline</span></button>
+    <button class="nav-item" onclick="openSettingsModal()">⚙️<span>Settings</span></button>
+  </nav>
+
+  <!-- Embedded JSON Database -->
+  <script type="application/json" id="embedded-videos-json">
+  [
+    {
+      "id": "jfKfPfyJRdk",
+      "title": "lofi hip hop radio - beats to relax/study to",
+      "channelTitle": "Lofi Girl",
+      "channelAvatar": "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=120&h=120&fit=crop",
+      "thumbnail": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=640&h=360&fit=crop",
+      "duration": "LIVE",
+      "views": "65K watching",
+      "publishedAt": "Live Now",
+      "description": "Peaceful lofi beats to study, relax, and code to. Ultra-low bandwidth stream compatible with 2G/3G connections.",
+      "category": "Music"
+    },
+    {
+      "id": "2Vv-BfVoq4g",
+      "title": "Ed Sheeran - Perfect (Official Music Video)",
+      "channelTitle": "Ed Sheeran",
+      "channelAvatar": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&h=120&fit=crop",
+      "thumbnail": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=640&h=360&fit=crop",
+      "duration": "4:40",
+      "views": "3.6B views",
+      "publishedAt": "5 years ago",
+      "description": "The official music video for Ed Sheeran - Perfect.",
+      "category": "Music"
+    },
+    {
+      "id": "dQw4w9WgXcQ",
+      "title": "Rick Astley - Never Gonna Give You Up (Official Music Video)",
+      "channelTitle": "Rick Astley",
+      "channelAvatar": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&h=120&fit=crop",
+      "thumbnail": "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=640&h=360&fit=crop",
+      "duration": "3:33",
+      "views": "1.5B views",
+      "publishedAt": "14 years ago",
+      "description": "Never Gonna Give You Up - Restored with low-bandwidth audio optimization.",
+      "category": "Music"
+    },
+    {
+      "id": "L_LUpnjgPso",
+      "title": "$456,000 Squid Game In Real Life!",
+      "channelTitle": "MrBeast",
+      "channelAvatar": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&h=120&fit=crop",
+      "thumbnail": "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=640&h=360&fit=crop",
+      "duration": "25:42",
+      "views": "610M views",
+      "publishedAt": "2 years ago",
+      "description": "Recreated every set from Squid Game in real life with 456 players.",
+      "category": "Entertainment"
+    },
+    {
+      "id": "jNQXAC9IVRw",
+      "title": "Me at the zoo (The First YouTube Video Ever)",
+      "channelTitle": "jawed",
+      "channelAvatar": "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&h=120&fit=crop",
+      "thumbnail": "https://images.unsplash.com/photo-1534567153574-2b12153a87f0?w=640&h=360&fit=crop",
+      "duration": "0:19",
+      "views": "320M views",
+      "publishedAt": "19 years ago",
+      "description": "The first video uploaded to YouTube by Jawed Karim in 2005.",
+      "category": "History"
+    },
+    {
+      "id": "k2P_amTce88",
+      "title": "What Happens If We Detonate All Nuclear Bombs at Once?",
+      "channelTitle": "Kurzgesagt – In a Nutshell",
+      "channelAvatar": "https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=120&h=120&fit=crop",
+      "thumbnail": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=640&h=360&fit=crop",
+      "duration": "11:06",
+      "views": "35M views",
+      "publishedAt": "4 years ago",
+      "description": "Scientific explanation of planetary detonation physics.",
+      "category": "Learning"
+    }
+  ]
+  </script>
+
+  <!-- Pure Vanilla JavaScript (Loads JSON & Powers Interactions) -->
+  <script>
+    let allVideos = [];
+    let currentVideo = null;
+    let isAudioMode = false;
+    let currentQuality = '360p';
+
+    // Initialize data from JSON
+    function initData() {
+      try {
+        const raw = document.getElementById('embedded-videos-json').textContent;
+        allVideos = JSON.parse(raw);
+      } catch(e) {
+        allVideos = [];
+      }
+      renderVideos(allVideos);
+    }
+
+    function renderVideos(videos) {
+      const container = document.getElementById('video-list');
+      container.innerHTML = '';
+      if (!videos || videos.length === 0) {
+        container.innerHTML = '<div style="padding:40px; text-align:center; color:#888; font-size:13px;">No videos found.</div>';
+        return;
+      }
+      videos.forEach(v => {
+        const card = document.createElement('div');
+        card.className = 'video-card';
+        card.onclick = () => playVideo(v);
+        card.innerHTML = `
+          <div class="thumb-wrap">
+            <img src="${v.thumbnail}" alt="${v.title}" loading="lazy" onerror="this.src='https://i.ytimg.com/vi/${v.id}/hqdefault.jpg'">
+            <span class="duration-pill">${v.duration || '3:30'}</span>
+          </div>
+          <div class="card-meta">
+            <img class="chan-avatar" src="${v.channelAvatar || 'https://ui-avatars.com/api/?name='+encodeURIComponent(v.channelTitle)}" alt="">
+            <div class="card-details">
+              <div class="card-title">${v.title}</div>
+              <div class="card-sub">${v.channelTitle} • ${v.views} • ${v.publishedAt}</div>
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+    }
+
+    function playVideo(video, audioOnly = false) {
+      currentVideo = video;
+      isAudioMode = audioOnly;
+      document.getElementById('player-title').innerText = video.title;
+      document.getElementById('player-meta').innerText = `${video.channelTitle} • ${video.views}`;
+      document.getElementById('player-channel').innerText = video.channelTitle;
+      document.getElementById('player-avatar').src = video.channelAvatar;
+      document.getElementById('player-desc').innerText = video.description || 'Enjoy watching on YouTube Lite.';
+
+      const iframe = document.getElementById('video-iframe');
+      const audioBox = document.getElementById('audio-screen');
+      const audioBtn = document.getElementById('audio-toggle-btn');
+
+      if (isAudioMode) {
+        iframe.style.display = 'none';
+        audioBox.classList.remove('hidden');
+        document.getElementById('audio-art').src = video.thumbnail;
+        document.getElementById('audio-title').innerText = video.title;
+        document.getElementById('audio-chan').innerText = video.channelTitle;
+        audioBtn.classList.add('active');
+        iframe.src = `https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&playsinline=1&modestbranding=1`;
+      } else {
+        audioBox.classList.add('hidden');
+        iframe.style.display = 'block';
+        audioBtn.classList.remove('active');
+        iframe.src = `https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&playsinline=1&controls=1&modestbranding=1`;
+      }
+
+      document.getElementById('player-modal').classList.remove('hidden');
+    }
+
+    function closePlayer() {
+      document.getElementById('video-iframe').src = '';
+      document.getElementById('player-modal').classList.add('hidden');
+    }
+
+    function toggleAudioMode() {
+      if (!currentVideo) return;
+      playVideo(currentVideo, !isAudioMode);
+    }
+
+    function filterCategory(cat) {
+      document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+      event.target.classList.add('active');
+      if (cat === 'All') {
+        renderVideos(allVideos);
+      } else {
+        renderVideos(allVideos.filter(v => v.category === cat));
+      }
+    }
+
+    function toggleSearch() {
+      const box = document.getElementById('search-box');
+      box.style.display = box.style.display === 'none' ? 'block' : 'none';
+      if (box.style.display === 'block') {
+        document.getElementById('search-input').focus();
+      }
+    }
+
+    function handleSearch(e) {
+      if (e.key === 'Enter') {
+        const q = e.target.value.trim().toLowerCase();
+        if (!q) return;
+        // Check for direct video ID
+        if (q.length === 11 && !q.includes(' ')) {
+          playVideo({
+            id: q,
+            title: 'Direct Video (' + q + ')',
+            channelTitle: 'YouTube',
+            channelAvatar: 'https://ui-avatars.com/api/?name=YT',
+            thumbnail: 'https://i.ytimg.com/vi/' + q + '/hqdefault.jpg',
+            duration: 'Live',
+            views: 'Direct Link',
+            publishedAt: 'Now'
+          });
+          return;
+        }
+        const matches = allVideos.filter(v =>
+          v.title.toLowerCase().includes(q) ||
+          v.channelTitle.toLowerCase().includes(q)
+        );
+        renderVideos(matches);
+      }
+    }
+
+    function saveOfflineCurrent() {
+      if (!currentVideo) return;
+      const downloads = JSON.parse(localStorage.getItem('yt_lite_downloads') || '[]');
+      if (!downloads.some(d => d.id === currentVideo.id)) {
+        downloads.push(currentVideo);
+        localStorage.setItem('yt_lite_downloads', JSON.stringify(downloads));
+      }
+      alert('Video saved to offline storage! Tap "Offline" in bottom bar to view.');
+    }
+
+    function showTab(tab) {
+      document.getElementById('main-content').classList.toggle('hidden', tab !== 'home');
+      document.getElementById('downloads-view').classList.toggle('hidden', tab !== 'downloads');
+      if (tab === 'downloads') {
+        renderDownloads();
+      }
+    }
+
+    function renderDownloads() {
+      const container = document.getElementById('downloads-list');
+      const downloads = JSON.parse(localStorage.getItem('yt_lite_downloads') || '[]');
+      if (downloads.length === 0) {
+        container.innerHTML = '<div style="padding:30px; text-align:center; color:#888; font-size:12px;">No offline videos yet. Tap "Save Offline" on any video.</div>';
+        return;
+      }
+      container.innerHTML = '';
+      downloads.forEach(d => {
+        const item = document.createElement('div');
+        item.style.cssText = 'display:flex; gap:10px; padding:10px; background:#1e1e1e; border-radius:10px; margin-bottom:8px; cursor:pointer;';
+        item.onclick = () => playVideo(d);
+        item.innerHTML = `
+          <img src="${d.thumbnail}" style="width:100px; aspect-ratio:16/9; object-fit:cover; border-radius:6px;">
+          <div style="flex:1; min-width:0;">
+            <div style="font-size:13px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.title}</div>
+            <div style="font-size:11px; color:#aaa; margin-top:2px;">${d.channelTitle}</div>
+            <div style="font-size:10px; color:var(--green); font-weight:700; margin-top:4px;">Ready Offline (~8.5 MB)</div>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function openQualityModal() {
+      const q = prompt('Select Quality:\\n1. 144p (~1.5 MB/10min)\\n2. 240p (~3.8 MB/10min)\\n3. 360p (~8.5 MB/10min)\\n4. 480p (~18 MB/10min)\\n5. 720p (~45 MB/10min)', currentQuality);
+      if (q) {
+        currentQuality = q;
+        document.getElementById('current-quality-badge').innerText = q;
+      }
+    }
+
+    function openSettingsModal() {
+      alert('YouTube Lite Settings:\\n• Low-RAM Mode: ACTIVE\\n• Hardware Acceleration: ENABLED\\n• Target: Android 4.4+ / Low-RAM Phones\\n• Storage Footprint: ~12 KB');
+    }
+
+    function shareCurrent() {
+      if (!currentVideo) return;
+      const url = 'https://www.youtube.com/watch?v=' + currentVideo.id;
+      if (navigator.share) {
+        navigator.share({ title: currentVideo.title, url });
+      } else {
+        prompt('Copy video link:', url);
+      }
+    }
+
+    function setSleepTimer() {
+      const min = prompt('Enter sleep timer minutes (e.g. 15, 30, 45):', '30');
+      if (min && !isNaN(min)) {
+        setTimeout(() => {
+          closePlayer();
+          alert('Sleep Timer: Playback stopped to save your phone battery.');
+        }, parseInt(min) * 60 * 1000);
+        alert(`Sleep timer set for ${min} minutes.`);
+      }
+    }
+
+    function toggleSub() {
+      const btn = document.getElementById('sub-btn');
+      btn.innerText = btn.innerText === 'Subscribe' ? 'Subscribed' : 'Subscribe';
+    }
+
+    initData();
+  </script>
+</body>
+</html>

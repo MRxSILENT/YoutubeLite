@@ -1,0 +1,9 @@
+[
+  { "id": "all", "name": "All", "tag": "General" },
+  { "id": "music", "name": "Music", "tag": "Audio" },
+  { "id": "gaming", "name": "Gaming", "tag": "Games" },
+  { "id": "tech", "name": "Tech", "tag": "Gadgets" },
+  { "id": "learning", "name": "Learning", "tag": "Science" },
+  { "id": "history", "name": "History", "tag": "Archive" },
+  { "id": "lowdata", "name": "Low Data", "tag": "144p/240p" }
+]
